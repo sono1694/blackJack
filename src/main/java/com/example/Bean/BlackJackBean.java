@@ -12,11 +12,11 @@ import lombok.Setter;
 public class BlackJackBean {
 
 	// 山札
-	ArrayList<Integer> list = new ArrayList<>(Collections.nCopies(52, 0));
+	private ArrayList<Integer> list = new ArrayList<>(Collections.nCopies(52, 0));
 	
 	//プレイヤー
-	List<Integer> player = new ArrayList<>(); 
+	private List<Integer> player = new ArrayList<>(); 
 	
 	//ディーラー
-	List<Integer> dealer = new ArrayList<>();
+	private List<Integer> dealer = new ArrayList<>();
 }

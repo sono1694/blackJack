@@ -1,9 +1,10 @@
 package com.example.demo;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Scanner;
+
+import com.example.Bean.BlackJackBean;
+import com.example.Logic.BlackJackLogic;
 
 public class BlackJackClass {
 
@@ -28,58 +29,61 @@ public class BlackJackClass {
 	public static void main(String[] args) {
 
 		System.out.println("ブラックジャックを開始します。");
+		//ボーンクラス呼び出し
 		boonClass();
+		
+		System.out.println("ブラックジャックを終了します。");
 	}
 
 	public static void boonClass() {
-
-		ArrayList<Integer> list = new ArrayList<>(Collections.nCopies(52, 0));
-		List<Integer> player = new ArrayList<>();
-		List<Integer> dealer = new ArrayList<>();
-
+		// インスタンス生成
+		BlackJackBean bean = new BlackJackBean();
+		BlackJackLogic logic = new BlackJackLogic();
 		int i = 0;
 
-		// 
+		// プレイヤーの合計算出用変数を宣言
 		int playerTotal = 0;
+		// ディーラーの合計算出用変数を宣言
 		int dealerTotal = 0;
 
 		// 山札作成
-		for (i = 0; i < list.size(); i++) {
-			list.set(i, i);
+		for (i = 0; i < bean.getList().size(); i++) {
+			bean.getList().set(i, i);
 		}
 
 		// 山札をシャッフル
-		Collections.shuffle(list);
+		Collections.shuffle(bean.getList());
 
 		// プレイヤーとディーラーが1回目の山札から引くフェーズ
-		player.add(list.get(0));
-		dealer.add(list.get(1));
-		System.out.println("プレイヤーの手札：" + cardConverter(player.get(0)) + converterAJQK(cardNumberConverter(player.get(0))));
-		System.out.println("ディーラーの手札：" + cardConverter(dealer.get(0)) + converterAJQK(cardNumberConverter(dealer.get(0))));
+		bean.getPlayer().add(bean.getList().get(0));
+		bean.getDealer().add(bean.getList().get(1));
+		System.out.println("プレイヤーの手札：" + logic.cardConverter(bean.getPlayer().get(0)) + logic.converterAJQK(logic.cardNumberConverter(bean.getPlayer().get(0))));
+		System.out.println("ディーラーの手札：" + logic.cardConverter(bean.getDealer().get(0)) + logic.converterAJQK(logic.cardNumberConverter(bean.getDealer().get(0))));
 
 		// 山札の引いた回数保有
 		int draw = 2;
 
 		// プレイヤーのドローフェーズ確認
-		for (i = 0; i < list.size(); i++) {
-			System.out.println("カードをドローしますか？（yかnを入力してください）");
+		for (i = 0; i < bean.getList().size(); i++) {
+			System.out.println("カードをドローしますか？（「y」or「n」を入力してください）");
+			@SuppressWarnings("resource")
 			Scanner scan = new Scanner(System.in);
 			String str = scan.next();
 
 			if (str.equals("y")) {
 				// プレイヤーのリストに山札から1枚追加
-				player.add(list.get(i + draw));
+				bean.getPlayer().add(bean.getList().get(i + draw));
 				draw = draw + i;
-				System.out.println("プレイヤーの手札：" + cardConverter(player.get(i + 1)) 
-						+ converterAJQK(cardNumberConverter(player.get(i + 1))));
+				System.out.println("プレイヤーの手札：" + logic.cardConverter(bean.getPlayer().get(i + 1)) 
+						+ logic.converterAJQK(logic.cardNumberConverter(bean.getPlayer().get(i + 1))));
 				// プレイヤーの手札合計算出
-				playerTotal = listTotal(player);
+				playerTotal = logic.listTotal(bean.getPlayer());
 				System.out.println("プレイヤーの手札合計値：" + playerTotal);
 
 				// バースト確認
-				Boolean result = cardBurst(playerTotal);
+				Boolean result = logic.cardBurst(playerTotal);
 				if (result) {
-					System.exit(0);
+					break;
 				}
 
 			} else if (str.equals("n")) {
@@ -91,24 +95,24 @@ public class BlackJackClass {
 			}
 		}
 
-		for (i = 0; i < list.size(); i++) {
+		for (i = 0; i < bean.getList().size(); i++) {
 			int totalResult = 0;
-			for (int total : dealer) {
+			for (int total : bean.getDealer()) {
 				totalResult = totalResult + total;
 			}
-			if (totalResult > 17) {
+			if (totalResult >= 17) {
 				// ディーラーのリストに山札から1枚追加
-				dealer.add(cardNumberConverter(list.get(i + draw)));
+				bean.getDealer().add(logic.cardNumberConverter(bean.getList().get(i + draw)));
 				draw = draw + i;
 				
 				// ディーラーの手札合計算出
-				dealerTotal = listTotal(dealer);
+				dealerTotal = logic.listTotal(bean.getDealer());
 
 				// デバック用
 				System.out.println("ディーラーの手札合計値：" + dealerTotal);
 
 				// バースト確認
-				Boolean result = cardBurst(dealerTotal);
+				Boolean result = logic.cardBurst(dealerTotal);
 				if (result) {
 					System.out.println("ディーラーがオーバーしました。");
 					System.out.println("プレイヤーの勝利です。");
@@ -125,79 +129,11 @@ public class BlackJackClass {
 			System.out.println("プレイヤーの勝利です。");
 		} else if (playerTotal < dealerTotal) {
 			System.out.println("ディーラーの勝利です。");
-		} else
-			System.out.println("引き分けです。");
-	}
-
-	// カードの種類変換
-	public static String cardConverter(int cardNumber) {
-		switch ((cardNumber -1) / 13) {
-		case 0:
-			return "♣";
-		case 1:
-			return "♦";
-		case 2:
-			return "♡";
-		case 3:
-			return "♠";
-		default:
-			return "例外です。";
-		}
-	}
-
-	// カードナンバーを1～13に変換
-	public static int cardNumberConverter(int cardNumber) {
-		int pos = cardNumber % 13;
-		if (pos == 0) {
-			return 13;
 		} else {
-			return pos;
+			System.out.println("引き分けです。");
 		}
 	}
 
-	// カードの1/11/12/13をA/J/Q/Kに変換
-	public static String converterAJQK(int cardNumber) {
-		switch (cardNumber) {
-		case 1:
-			return "A";
-		case 11:
-			return "J";
-		case 12:
-			return "Q";
-		case 13:
-			return "K";
-		default:
-			return Integer.toString(cardNumber);
-		}
-	}
 
-	// カードがJ/Q/Kの場合、10に変換
-	public static int cardOverConverter(int cardNumber) {
-		if (cardNumber > 10) {
-			return cardNumber = 10;
-		}
-		return cardNumber;
-	}
-
-	// 手札がバーストしたか確認
-	public static Boolean cardBurst(int result) {
-		if (result > 21) {
-			System.out.println("手札が21を超えました。");
-			return true;
-		}
-		return false;
-	}
-
-	public static int listTotal(List<Integer> list) {
-		int result = 0;
-		for (int total : list) {
-			total = cardNumberConverter(total);
-			if (total > 10) {
-				total = cardOverConverter(total);
-			}
-			result = result + total;
-		}
-		return result;
-	}
 
 }
