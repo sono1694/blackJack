@@ -6,6 +6,11 @@ import java.util.Scanner;
 import com.example.Bean.BlackJackBean;
 import com.example.Logic.BlackJackLogic;
 
+/**
+ * ブラックジャックメインクラス
+ * @author 
+ *
+ */
 public class BlackJackClass {
 
 //	カード枚数は52枚。ジョーカーは含めない。カードの重複が無いように山札を構築する。
@@ -29,12 +34,13 @@ public class BlackJackClass {
 	public static void main(String[] args) {
 
 		System.out.println("ブラックジャックを開始します。");
-		//ボーンクラス呼び出し
+		// ボーンクラス呼び出し
 		boonClass();
-		
+		System.out.println();
 		System.out.println("ブラックジャックを終了します。");
 	}
 
+	@SuppressWarnings("resource")
 	public static void boonClass() {
 		// インスタンス生成
 		BlackJackBean bean = new BlackJackBean();
@@ -57,33 +63,41 @@ public class BlackJackClass {
 		// プレイヤーとディーラーが1回目の山札から引くフェーズ
 		bean.getPlayer().add(bean.getList().get(0));
 		bean.getDealer().add(bean.getList().get(1));
-		System.out.println("プレイヤーの手札：" + logic.cardConverter(bean.getPlayer().get(0)) + logic.converterAJQK(logic.cardNumberConverter(bean.getPlayer().get(0))));
-		System.out.println("ディーラーの手札：" + logic.cardConverter(bean.getDealer().get(0)) + logic.converterAJQK(logic.cardNumberConverter(bean.getDealer().get(0))));
+		System.out.println("プレイヤーの手札：" + logic.cardConverter(bean.getPlayer().get(0))
+				+ logic.converterAJQK(logic.cardNumberConverter(bean.getPlayer().get(0))));
+		System.out.println("ディーラーの手札：" + logic.cardConverter(bean.getDealer().get(0))
+				+ logic.converterAJQK(logic.cardNumberConverter(bean.getDealer().get(0))));
 
 		// 山札の引いた回数保有
 		int draw = 2;
 
-		// プレイヤーのドローフェーズ確認
+		// プレイヤーのドローフェーズ
 		for (i = 0; i < bean.getList().size(); i++) {
 			System.out.println("カードをドローしますか？（「y」or「n」を入力してください）");
-			@SuppressWarnings("resource")
 			Scanner scan = new Scanner(System.in);
 			String str = scan.next();
 
 			if (str.equals("y")) {
+				/** 手札に加える前にカードを表示<br>
+				 *   手札に加えた後だと柄が固定されてしまうため
+				 */
+				System.out.println("ドローしたカード：" + logic.cardConverter(bean.getList().get(i + draw))
+						+ logic.converterAJQK(logic.cardNumberConverter(bean.getList().get(i + draw))));
+
 				// プレイヤーのリストに山札から1枚追加
-				bean.getPlayer().add(bean.getList().get(i + draw));
+				bean.getPlayer().add(logic.cardNumberConverter(bean.getList().get(i + draw)));
 				draw = draw + i;
-				System.out.println("プレイヤーの手札：" + logic.cardConverter(bean.getPlayer().get(i + 1)) 
-						+ logic.converterAJQK(logic.cardNumberConverter(bean.getPlayer().get(i + 1))));
+
 				// プレイヤーの手札合計算出
 				playerTotal = logic.listTotal(bean.getPlayer());
 				System.out.println("プレイヤーの手札合計値：" + playerTotal);
 
-				// バースト確認
+				// 21バースト確認
 				Boolean result = logic.cardBurst(playerTotal);
 				if (result) {
-					break;
+					System.out.println("プレイヤーの手札がバーストしました。");
+					System.out.println("ディーラーの勝利です。");
+					return;
 				}
 
 			} else if (str.equals("n")) {
@@ -95,35 +109,38 @@ public class BlackJackClass {
 			}
 		}
 
-		for (i = 0; i < bean.getList().size(); i++) {
-			int totalResult = 0;
-			for (int total : bean.getDealer()) {
-				totalResult = totalResult + total;
-			}
-			if (totalResult >= 17) {
+		// プレイヤーのドローフェーズ
+		for (i = 0; i < bean.getList().size() - draw; i++) {
+			if (dealerTotal <= 17) {
 				// ディーラーのリストに山札から1枚追加
 				bean.getDealer().add(logic.cardNumberConverter(bean.getList().get(i + draw)));
 				draw = draw + i;
-				
+
 				// ディーラーの手札合計算出
 				dealerTotal = logic.listTotal(bean.getDealer());
-
 				// デバック用
-				System.out.println("ディーラーの手札合計値：" + dealerTotal);
+//				System.out.println("ディーラーの手札合計値：" + dealerTotal);
 
-				// バースト確認
+				// 21バースト確認
 				Boolean result = logic.cardBurst(dealerTotal);
 				if (result) {
-					System.out.println("ディーラーがオーバーしました。");
+					System.out.println("ディーラーの手札合計値：" + dealerTotal);
+					System.out.println("ディーラーの手札がバーストしました。");
 					System.out.println("プレイヤーの勝利です。");
-					System.exit(0);
+					return;
 				}
-
-			} else {
-				System.out.println("ディーラーがオーバーしました。");
-				break;
 			}
 		}
+		resultContrast(playerTotal, dealerTotal);
+		return;
+	}
+
+	// プレイヤーとディーラーの手札比較
+	private static void resultContrast(int playerTotal, int dealerTotal) {
+		System.out.println();
+		System.out.println("プレイヤーの手札合計値：" + playerTotal);
+		System.out.println("ディーラーの手札合計値：" + dealerTotal);
+		System.out.println();
 
 		if (playerTotal > dealerTotal) {
 			System.out.println("プレイヤーの勝利です。");
@@ -133,7 +150,5 @@ public class BlackJackClass {
 			System.out.println("引き分けです。");
 		}
 	}
-
-
 
 }
